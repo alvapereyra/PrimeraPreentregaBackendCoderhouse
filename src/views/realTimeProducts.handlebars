@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Real-Time Products</title>
+</head>
+<body>
+    <h1>Real-Time Products</h1>
+    <form id="product-form">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required>
+        <label for="price">Price:</label>
+        <input type="number" id="price" name="price" required>
+        <button type="submit">Add Product</button>
+    </form>
+    <hr>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Price</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="product-list">
+        {{#each products}}
+        <tr>
+          <td>{{name}}</td>
+          <td>{{price}}</td>
+          <td>
+            <form class="delete-form" action="/api/products/{{id}}" method="post">
+              <input type="hidden" name="_method" value="delete">
+              <button type="submit">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+    
+    <script>
+      const socket = new WebSocket('ws://' + window.location.host);
+      const productForm = document.getElementById('product-form');
+      const productList = document.getElementById('product-list');
+
+      // Add product form submit event listener
+      productForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+
+        const name = document.getElementById('name').value;
+        const price = document.getElementById('price').value;
+
+        // Send new product data to server via websocket
+        socket.send(JSON.stringify({
+          action: 'create',
+          product: {
+            name: name,
+            price: price
+          }
+        }));
+
+        // Clear form inputs
+        productForm.reset();
+      });
+
+      // Handle websocket messages
+      socket.addEventListener('message', (event) => {
+        const data = JSON.parse(event.data);
+
+        // If the message is a list of products, update the product list in the view
+        if (data.action === 'list') {
+          productList.innerHTML = '';
+          data.products.forEach((product) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${product.name}</td>
+              <td>${product.price}</td>
+              <td>
+                <form class="delete-form" action="/api/products/${product.id}" method="post">
+                  <input type="hidden" name="_method" value="delete">
+                  <button type="submit">Delete</button>
+                </form>
+              </td>
+            `;
+            productList.appendChild(tr);
+          });
+        }
+      });
+    </script>
