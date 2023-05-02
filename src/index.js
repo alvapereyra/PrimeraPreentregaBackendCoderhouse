@@ -5,10 +5,18 @@ import {engine} from "express-handlebars"
 import * as path from "path"
 import __dirname from "./util.js"
 import ProductManager from './controller/ProductManager.js';
+import viewRouter from "./router/views.routes.js" 
+import { Server } from "socket.io";
 
 const app = express()
 const PORT = 8080
 const product = new ProductManager()
+
+const server = app.listen(PORT, ()=>{
+    console.log(`Servidor Express Puerto ${PORT}`);
+})
+
+const io = new Server (server);
 
 app.use(express.json())
 app.use(express.urlencoded({extended: true}));
@@ -31,8 +39,19 @@ app.get("/", async (req,res) => {
 
 app.use("/api/products", ProductRouter)
 app.use("/api/cart", CartRouter)
+app.use('/', viewRouter);
 
+const emitirProductos = async () => {
+    const productos = await product.getProducts();
+    io.emit('products', productos);
+}
 
-app.listen(PORT, ()=>{
-    console.log(`Servidor Express Puerto ${PORT}`);
+io.on("connection", async socket => {
+    console.log("Conectado");
+    await emitirProductos();
+})
+io.on("addProduct", async data => {
+    console.log("se llamo")
+    await product.addProduct(data)
+    await emitirProductos();
 })

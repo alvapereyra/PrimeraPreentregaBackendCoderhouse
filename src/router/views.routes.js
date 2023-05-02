@@ -5,5 +5,7 @@ const product = new ProductManager()
 const viewRouter = Router();
 
 viewRouter.get('/realtimeproducts', async (req, res) => {
-    res.render('realTimeProducts', { products: await product.getProducts() });
+    res.render('realTimeProducts');
 });
+
+export default viewRouter
