@@ -48,6 +48,7 @@ class ProductManager {
     }
 
     deleteProducts = async (id) =>{
+        console.log(id);
         let products = await this.readProducts();
         let existProducts = products.some(prod => prod.id === id)
         if (existProducts){

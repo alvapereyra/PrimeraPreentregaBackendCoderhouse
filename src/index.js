@@ -49,9 +49,13 @@ const emitirProductos = async () => {
 io.on("connection", async socket => {
     console.log("Conectado");
     await emitirProductos();
+    socket.on("addProduct", async data => {
+        await product.addProducts(data)
+        await emitirProductos();
+    })
+    socket.on("deleteProduct", async id => {
+        await product.deleteProducts(id);
+        await emitirProductos();
+    })
 })
-io.on("addProduct", async data => {
-    console.log("se llamo")
-    await product.addProduct(data)
-    await emitirProductos();
-})
+

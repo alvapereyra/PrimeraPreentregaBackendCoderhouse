@@ -1,7 +1,7 @@
 <h1>Real-Time Products</h1>
 <form id="form">
-    <label for="name">Name:</label>
-    <input type="text" id="name" name="name" required />
+    <label for="title">Title:</label>
+    <input type="text" id="title" name="title" required />
     <label for="description">Description:</label>
     <input type="text" id="description" name="description" required />
     <label for="price">Price:</label>
@@ -14,33 +14,42 @@
 </form>
 <hr />
 <table>
-  <thead>
+<thead>
     <tr>
-      <th>Name</th>
-      <th>Price</th>
-      <th></th>
+    <th>Name</th>
+    <th>Price</th>
+    <th></th>
     </tr>
-  </thead>
-  <tbody id="product-list">
+</thead>
+<tbody id="product-list">
     {{!-- {{#each products}}
-      <tr>
+    <tr>
         <td>{{name}}</td>
         <td>{{price}}</td>
         <td>
-          <form class="delete-form" action="/api/products/{{id}}" method="post">
+        <form class="delete-form" action="/api/products/{{id}}" method="post">
             <input type="hidden" name="_method" value="delete" />
             <button type="submit">Delete</button>
-          </form>
+        </form>
         </td>
-      </tr>
+    </tr>
     {{/each}} --}}
-  </tbody>
+</tbody>
 </table>
 <script src="/socket.io/socket.io.js"></script>
 <script>
     const socket = io("ws://localhost:8080"); 
     const formulario = document.getElementById('form')
     const listProducts = document.getElementById("product-list")
+    const addListenerToDeleteButtons = () => {
+        const deleteButtons = document.getElementsByClassName('delete btn')
+        const deleteButtonsArray = Array.from(deleteButtons)
+        deleteButtonsArray.forEach(button => {
+            button.addEventListener('click', () => {
+            socket.emit('deleteProduct', button.id)
+        })
+        })
+    }
     formulario.addEventListener("submit", (event) => {
         event.preventDefault();
         const data = Object.fromEntries(new FormData(event.target))
@@ -51,10 +60,12 @@
         data.forEach(producto => {
         productos += 
         `<tr>
-            <td>${producto.name}</td>
+            <td>${producto.title}</td>
             <td>${producto.price}</td>
+            <button type="button" class="delete btn" id=${producto.id}>Delete</button>
         </tr>`
     })
     listProducts.innerHTML = productos;
+    addListenerToDeleteButtons();
     })
 </script>
